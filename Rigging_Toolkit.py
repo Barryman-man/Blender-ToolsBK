@@ -1,19 +1,24 @@
 import bpy
 
-#######################################################################
-# Barry Rigging toolkit. Current tools                                #
-# - Prop Colors/Groups                                                #
-#   - Adds custom colors sets, creates required bone groups and       #
-#       connects for props.                                           #
-# - Character Colors/Groups                                           #
-#   - Adds custom colors sets, creates required bone groups and       #
-#       connects for Characters.                                      #
-#                                                                     #
-#                                                                     #
-#   - TODO: - Better check for existing colors and groups             #
-#           - or Remove exisitng colors and groups before adding      #
-#           - thurough commenting                                     #
-#######################################################################
+#########################################################################
+# Barry Rigging toolkit. - Blender 5.x and above - rigify API Changes   #
+# Current tools                                                         #
+# - Prop Colors/Groups                                                  #
+#   - Adds custom colors sets, creates required bone groups and         #
+#       connects for props.                                             #
+# - Character Colors/Groups                                             #
+#   - Adds custom colors sets, creates required bone groups and         #
+#       connects for Characters.                                        #
+# - Hard Weight to Bone                                                 #
+#    - takes bone name coppied to clipboard                             #
+#    - creates vertex group with that name                              #
+#    - assignes all verticies from object to that vertex group          #
+#                                                                       #
+#   - TODO: - Better check for existing colors and groups               #
+#           - or Remove exisitng colors and groups before adding        #
+#           - thurough commenting                                       #
+#           - add armature modifier to object                           #
+#########################################################################
 
 
 class RIG_OT_add_bone_props_collections_and_colors(bpy.types.Operator):
@@ -81,26 +86,12 @@ class RIG_OT_add_bone_props_collections_and_colors(bpy.types.Operator):
             
 
         groupName = list(bpy.context.object.data.collections_all)
+        colorName = ("Root", "Root.001", "COG.001", "COG.002", "OBJ.001", "OBJ.002", "OBJ1.001", "OBJ1.002")
 
- 
-    # singleGroups
         for group in groupName:
-            if "Root" == group.name:
-                group['rigify_color_set_id'] = 1
-            if "Root.001" == group.name:
-                group['rigify_color_set_id'] = 2
-            if "COG.001" == group.name:
-                group['rigify_color_set_id'] = 3
-            if "COG.002" == group.name:
-                group['rigify_color_set_id'] = 4
-            if "OBJ.001" == group.name:
-                group['rigify_color_set_id'] = 5
-            if "OBJ.002" == group.name:
-                group['rigify_color_set_id'] = 6
-            if "OBJ1.001" == group.name:
-                group['rigify_color_set_id'] = 7
-            if "OBJ1.002" == group.name:
-                group['rigify_color_set_id'] = 8
+            for color in colorName:
+                if color == group.name:
+                    group.rigify_color_set_name = color
 
         return {"FINISHED"}
 
@@ -154,7 +145,7 @@ class RIG_OT_add_bone_character_collections_and_colors(bpy.types.Operator):
             print("Creating colors")
             bpy.ops.armature.rigify_color_set_remove_all()
             armature = bpy.ops.armature
-            props = ("Root", "Root.001", "Right", "RightSub", "Left", "LeftSub", "Core", "CoreSub")
+            props = ("Root", "Root.001", "Right", "Right Sub", "Left", "Left Sub", "Core", "Core Sub")
             colors = (0.435294, 0.184314, 0.415686, 0.156211, 0.131012, 0.305411, 0.604, 0.000, 0.000, 0.736, 0.192, 0.201, 0.000, 0.004, 0.604, 0.005, 0.335, 0.604, 0.957, 0.788, 0.047, 0.468, 0.297, 0.023)
 
             colorIndex = 0
@@ -171,44 +162,54 @@ class RIG_OT_add_bone_character_collections_and_colors(bpy.types.Operator):
 
 
         # left and sub left coloring
-        for group in groupName:
-            if ".L" in group.name:
-                if "(Detail)" in group.name:
-                    group['rigify_color_set_id'] = 6
-                elif "(Tweak)" in group.name:
-                    group['rigify_color_set_id'] = 6
-                elif "(Sub)" in group.name:
-                    group['rigify_color_set_id'] = 6
-                else:
-                    group['rigify_color_set_id'] = 5
+            groupName = list(bpy.context.object.data.collections_all)
+            subGroups = ("(Detail)", "(Tweak)", "(Sub)")
+            colorName = ("Root", "Root.001", "Core", "Core Sub")
 
-        # right and sub right coloring
-        for group in groupName:
-            if ".R" in group.name:
-                if "(Detail)" in group.name:
-                    group['rigify_color_set_id'] = 4
-                elif "(Tweak)" in group.name:
-                    group['rigify_color_set_id'] = 4
-                elif "(Sub)" in group.name:
-                    group['rigify_color_set_id'] = 4
+            for group in groupName:
+                if ".L" in group.name:
+                    group.rigify_color_set_name = "Left"
+                    for sub in subGroups:
+                        if sub in group.name:
+                            group.rigify_color_set_name = "LeftSub"
+                if ".R" in group.name:
+                    group.rigify_color_set_name = "Right"
+                    for sub in subGroups:
+                        if sub in group.name:
+                            group.rigify_color_set_name = "RightSub"
                 else:
-                    group['rigify_color_set_id'] = 3
-                    
-                    
-        # singleGroups
-        for group in groupName:
-            if "Root" == group.name:
-                group['rigify_color_set_id'] = 1
-            if "Root.001" == group.name:
-                group['rigify_color_set_id'] = 2
-            if "Core" == group.name:
-                group['rigify_color_set_id'] = 7
-            if "Core Sub" == group.name:
-                group['rigify_color_set_id'] = 8
-        return {"FINISHED"}
+                    for color in colorName:
+                        if group.name == color:
+                            group.rigify_color_set_name = color
+        return {'FINISHED'}
     
     
+class RIG_OT_hard_weight_to_coppied_bone(bpy.types.Operator):
+    """Uses bone name coppied from clipboard to create a vertex group and assigning all vertices of object to the vertex group to help with hard weighting to a bone."""
+    bl_idname = "rigging.hard_weight_to_coppied_bone"
+    bl_label = "Creates a vertex group and assigns all vertices of object to it."
     
+    def execute(self, context):
+        # check if vertex group already exists
+        vertexGroups = bpy.context.object.vertex_groups
+        coppiedBone = bpy.context.window_manager.clipboard
+
+
+        if coppiedBone in vertexGroups:
+            print("vertex group already exists")
+
+        else:
+            newGroup = bpy.context.object.vertex_groups.new()
+            newGroup.name = coppiedBone
+            bpy.ops.object.mode_set(mode='EDIT')
+            bpy.ops.mesh.select_all(action='SELECT')
+            bpy.ops.object.vertex_group_assign()
+            bpy.ops.object.mode_set(mode='OBJECT')
+            
+        return {'FINISHED'}
+
+
+   
 # start of panel
 class VIEW3D_PT_rigging_panel(bpy.types.Panel):
     
@@ -228,7 +229,8 @@ class VIEW3D_PT_rigging_panel(bpy.types.Panel):
         row.operator("rigging.add_custom_props_groups_and_colors", text = "Prop Colors/Groups")
         row = self.layout.row()
         row.operator("rigging.add_custom_character_groups_and_colors", text = "Character Colors/Groups")
-
+        row = self.layout.row()
+        row.operator("rigging.hard_weight_to_coppied_bone", text = "Hard Weight to Bone")
         
 
 
@@ -236,6 +238,7 @@ class VIEW3D_PT_rigging_panel(bpy.types.Panel):
 def register():
     bpy.utils.register_class(RIG_OT_add_bone_props_collections_and_colors)
     bpy.utils.register_class(RIG_OT_add_bone_character_collections_and_colors)
+    bpy.utils.register_class(RIG_OT_hard_weight_to_coppied_bone)
     bpy.utils.register_class(VIEW3D_PT_rigging_panel)
 
     
@@ -243,6 +246,7 @@ def unregister():
     bpy.utils.register_class(RIG_OT_add_bone_props_collections_and_colors)
     bpy.utils.unregister_class(VIEW3D_PT_rigging_panel)
     bpy.utils.register_class(RIG_OT_add_bone_character_collections_and_colors)
+    bpy.utils.register_class(RIG_OT_hard_weight_to_coppied_bone)
         
 if __name__ == "__main__":
     register()
