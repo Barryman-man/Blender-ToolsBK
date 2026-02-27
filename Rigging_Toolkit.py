@@ -13,11 +13,13 @@ import bpy
 #    - takes bone name coppied to clipboard                             #
 #    - creates vertex group with that name                              #
 #    - assignes all verticies from object to that vertex group          #
+#    - checks for existing vertex group and passes if exists            #
+#    - checks for existing Armature Modifer and passes if exists        #
+#    - adds armature modifier based off of Meta rig rigify_target_rig   #
 #                                                                       #
 #   - TODO: - Better check for existing colors and groups               #
 #           - or Remove exisitng colors and groups before adding        #
 #           - thurough commenting                                       #
-#           - add armature modifier to object                           #
 #########################################################################
 
 
