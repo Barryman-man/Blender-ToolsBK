@@ -205,6 +205,17 @@ class RIG_OT_hard_weight_to_coppied_bone(bpy.types.Operator):
             bpy.ops.mesh.select_all(action='SELECT')
             bpy.ops.object.vertex_group_assign()
             bpy.ops.object.mode_set(mode='OBJECT')
+            for armature in bpy.data.armatures:
+                object = bpy.data.armatures[armature.name]
+                if object.rigify_target_rig != None:
+                    selectedObj = bpy.context.object
+                    #if armature modifier already exists, pass
+                    if not selectedObj.modifiers:
+                        print("no mods")
+                        armatureCNST = bpy.data.objects[selectedObj.name].modifiers.new(name='Armature', type='ARMATURE')
+                        armatureCNST.object = object.rigify_target_rig                
+                    else:
+                        print("has mods")
             
         return {'FINISHED'}
 
