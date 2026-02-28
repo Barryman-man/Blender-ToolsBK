@@ -3,6 +3,11 @@ import bpy
 #########################################################################
 # Barry Rigging toolkit. - Blender 5.x and above - rigify API Changes   #
 # Current tools                                                         #
+# - Create Asset Collections                                            #
+#   - Add asset name to text field                                      #
+#   - Create Asset Collections will create Main asset collection and    #
+#       GEO- and RIG- child collections                                 #
+#   - checks of any collections exist before exiting                    #
 # - Prop Colors/Groups                                                  #
 #   - Adds custom colors sets, creates required bone groups and         #
 #       connects for props.                                             #
@@ -23,6 +28,45 @@ import bpy
 #########################################################################
 
 
+class RIG_OT_prep_asset_collections(bpy.types.Operator):
+    """Adds collections required based on input field text"""
+    bl_idname = "rigging.prep_asset_collections"
+    bl_label = "Input asset name in text field and creates required collections for asset"
+    
+    # text field 
+    bpy.types.Scene.asset_name = bpy.props.StringProperty(
+    name="Asset Name",
+    description="Enter Asset Name.",
+    default=""
+    )
+
+    
+    def execute(self, context):
+        
+        assetName = bpy.data.scenes["Scene"].asset_name
+
+        for collection in bpy.data.collections:
+            if collection.name == assetName:
+                print("main collection already created")
+                return{'CANCELLED'}
+            
+
+        
+        # create main collection
+        assetCol = bpy.data.collections.new(name=assetName)
+        bpy.context.scene.collection.children.link(assetCol)
+
+        # create rig and geo collections
+        rigCol = bpy.data.collections.new(name="RIG-" + assetName)
+        #bpy.context.scene.collection.children.link(rigCol)
+        bpy.data.collections[assetName].children.link(rigCol)
+
+        geoCol = bpy.data.collections.new(name="GEO-" + assetName)
+        bpy.data.collections[assetName].children.link(geoCol)
+        
+        return{'FINISHED'}
+        
+        
 class RIG_OT_add_bone_props_collections_and_colors(bpy.types.Operator):
     """Adds Custom Color Set, Bone Groups and connects for props"""
     bl_idname = "rigging.add_custom_props_groups_and_colors"
@@ -237,18 +281,25 @@ class VIEW3D_PT_rigging_panel(bpy.types.Panel):
     def draw(self, context):
         """define the layout of the panel"""
         # begin panel generation
+        layout = self.layout
+        scene = context.scene
 
+        row = self.layout.row()
+        layout.prop(scene, "asset_name", text="Asset Name")
+        row = self.layout.row()
+        row.operator("rigging.prep_asset_collections", text = "Create Asset Collections")
         row = self.layout.row() # define rows in draw
         row.operator("rigging.add_custom_props_groups_and_colors", text = "Prop Colors/Groups")
         row = self.layout.row()
         row.operator("rigging.add_custom_character_groups_and_colors", text = "Character Colors/Groups")
         row = self.layout.row()
         row.operator("rigging.hard_weight_to_coppied_bone", text = "Hard Weight to Bone")
-        
+
 
 
 # register the panel with Blender
 def register():
+    bpy.utils.register_class(RIG_OT_prep_asset_collections)
     bpy.utils.register_class(RIG_OT_add_bone_props_collections_and_colors)
     bpy.utils.register_class(RIG_OT_add_bone_character_collections_and_colors)
     bpy.utils.register_class(RIG_OT_hard_weight_to_coppied_bone)
@@ -256,6 +307,7 @@ def register():
 
     
 def unregister():
+    bpy.utils.register_class(RIG_OT_prep_asset_collections)
     bpy.utils.register_class(RIG_OT_add_bone_props_collections_and_colors)
     bpy.utils.unregister_class(VIEW3D_PT_rigging_panel)
     bpy.utils.register_class(RIG_OT_add_bone_character_collections_and_colors)
