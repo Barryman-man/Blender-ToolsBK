@@ -1,3 +1,9 @@
+bl_info = {
+    "name" = "Rigging Toolkit",
+    "author" = "Barry Karnowski",
+    "blender" = "5, 0, 0",
+    "category" = "Rigging",
+)
 import bpy
 
 #########################################################################
@@ -314,4 +320,5 @@ def unregister():
     bpy.utils.register_class(RIG_OT_hard_weight_to_coppied_bone)
         
 if __name__ == "__main__":
+
     register()
